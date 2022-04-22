@@ -1,0 +1,443 @@
+#######################################################################################################################################################################
+import pandas as pd
+import numpy as np
+import statsmodels.api as sm
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
+import random
+import matplotlib.pyplot as plt
+from math import sqrt
+from sklearn.linear_model import LinearRegression
+from sklearn import neighbors
+from sklearn.svm import SVR
+from sklearn.tree import DecisionTreeRegressor
+
+
+##########################################################################################################################################################################
+############################################################## Regressão Linear Múltipla #######################################################################################
+##########################################################################################################################################################################
+
+#Define os valores de treino e de teste de forma aleatória 
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=0)
+
+#Construção do modelo e criação de uma tabela com os resultados obtidos 
+X2 = sm.add_constant(X_train)
+est = sm.OLS(Y_train, X2)
+est2 = est.fit()
+tabela= est2.summary()
+
+#Construção do modelo a partir de uma outra biblioteca
+modelo = LinearRegression()  
+modelo.fit(X_train, Y_train)                                      #fazer regressão (determinação modelo)
+R = modelo.score(X_train, Y_train)                          #determinar R2
+pred= modelo.predict(X_test)                                   #previsão valor de Y com valores teste
+interceção= modelo.intercept_
+coeficientes= modelo.coef_
+
+#Construção dos gráficos
+plt.scatter(modelo.predict(X_train),Y_train, color='blue', label='Train')
+plt.scatter(modelo.predict(X_test),Y_test, color='red', label='Test')
+plt.xlabel("Y modelo")
+plt.ylabel("Y real")
+plt.title('Regressão Linear Múltipla (com/sem componentes puros)')
+
+#Construção da reta de ajuste
+linear_model=np.polyfit(modelo.predict(X_train),Y_train,1)   #estima coeficientes reta treino
+linear_model_fn=np.poly1d(linear_model)                             #faz a equação y=mx+b
+x_s=np.arange(50,85)
+plt.plot(x_s,linear_model_fn(x_s), color="green")                  #desenha a reta
+plt.legend() 
+plt.show()
+
+
+##########################################################################################################################################################################
+########################################################### K-Vizinhos Mais Próximos (KNN) ################################################################################
+##########################################################################################################################################################################
+
+#Função para determinar os pontos mais próximos
+def find_neighbors(k, X_tr, new_point):
+    neighbor_arr = []
+    for i in range(len(X_tr)):                                                   #percorre as linhas
+        dist = np.sqrt(sum(np.square(X_tr[i]-new_point)))       #cálculo distância euclidiana
+        neighbor_arr.append([i, dist])
+        neighbor_ordenado= sorted(neighbor_arr, key = lambda x : x[1])    #ordena as distâncias
+    return neighbor_ordenado[0:k]                 #retorna apenas as primeiras linhas dependendo do número K definido   
+
+"""Não esquecer que segundo valor de cada vetor simboliza a distância"""
+
+#Função para prever o valor da variável independente 
+def regressor(neighbor_arr):                              # neighbor_arr são distancias
+    y_arr = [Y_train[i[0]] for i in neighbor_arr]      #dentro do vetor vai retornar os diferentes valores de y    
+    avg_y = np.mean(y_arr)                                 #Aplica a média aritmética
+    return avg_y
+
+#Função para determinar as variáveis independentes de um conjunto de pontos de teste
+def previsão(k, X_tr, new_points):
+    v=[ ] 
+    for i in new_points:
+        dist = find_neighbors(k, X_tr, i)
+        pred = regressor(dist)
+        v.append(pred)
+    return v
+
+#Define os valores de treino e de teste de forma aleatória 
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=0)
+
+#Determinação das variáveis independentes para diferentes valores de K
+K=2   #Este valor 2 é apenas um exemplo
+pred=previsão(K, X_train, X_test)
+
+#Determinação da taxa de erro para diferentes valores de K
+rmse_val = []                           #para armazenar os valores de rmse para diferentes valores k 
+for K in range(40):
+    K = K+1
+    model = neighbors.KNeighborsRegressor(n_neighbors = K, metric='euclidean')
+    model.fit(X_train, Y_train)  #fit the model
+    pred1=model.predict(X_test)                                             #faz a previsão dos dados de teste
+    error = sqrt(mean_squared_error(Y_test,pred1))               #calcula o rmse
+    rmse_val.append(error) #store rmse values
+    #print('RMSE value for k= ' , K , 'is:', error)
+
+#Construção do modelo a partir de uma biblioteca
+knn = neighbors.KNeighborsRegressor()
+model = GridSearchCV(knn, params, cv=10)
+model.fit(X_train,Y_train)
+melhor_K=model.best_params_
+pred=model.predict(X_test)
+R=model.score(X_train,Y_train)
+Comparar valores obtidos pela função e pela biblioteca
+v=[]
+for i in range(len(pred)):
+    b=[pred[i],a[i]]
+    v.append(b)
+"""ou"""
+#print(list(zip(a,pred)))
+
+#Construção dos gráficos
+plt.scatter(previsão(K, X_train, X_train),Y_train, color='blue', label='Train')
+plt.scatter(previsão(K, X_train, X_test),Y_test, color='red', label='Test')
+plt.xlabel("Y modelo")
+plt.ylabel("Y real")
+plt.title('KNN (com/sem componentes puros)')
+
+#Construção da reta de ajuste
+linear_model=np.polyfit(previsão(3, X_train, X_train),Y_train,1)               #estima coeficientes reta treino
+linear_model_fn=np.poly1d(linear_model)     #faz a equação y=mx+b
+x_s=np.arange(85,100)
+plt.plot(x_s,linear_model_fn(x_s), color="green")                                     #desenha a reta
+plt.legend()
+plt.show()
+
+
+##########################################################################################################################################################################
+############################################################ Regressão de Vetores de Suporte (SVR) ########################################################################
+##########################################################################################################################################################################
+
+#Normalização das variáveis dependentes e independentes
+sc_X = StandardScaler()
+sc_y = StandardScaler()
+X = sc_X.fit_transform(x)
+Y = sc_y.fit_transform(y.reshape(-1,1))
+
+#Define os valores de treino e de teste de forma aleatória 
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=0)
+
+#Construção do modelo a partir de uma biblioteca
+model = SVR(kernel = 'linear')                       #kernel pode ser igual a linear, rbf ou poly
+model.fit(X_train, Y_train.reshape(1,-1)[0])
+R=model.score(X_train, Y_train.reshape(1,-1)[0])
+pred = model.predict(X_test)
+pred=sc_y.inverse_transform(pred.reshape(-1,1))
+previsao_test = pred.reshape(1,-1)[0]
+
+#Construção dos gráficos
+plt.scatter(model.predict(X_train),Y_train.reshape(1,-1)[0], color='blue', label='Train')
+plt.scatter(model.predict(X_test),Y_test.reshape(1,-1)[0], color='red', label='Test')
+plt.xlabel("Y modelo")
+plt.ylabel("Y real")
+plt.title('SVR (com/sem componentes puros)')
+
+#Construção da reta de ajuste
+linear_model=np.polyfit(model.predict(X_train),Y_train.reshape(1,-1)[0],1)       #estima coeficientes reta treino
+print(linear_model)
+linear_model_fn=np.poly1d(linear_model)     #faz a equação y=mx+b
+x_s=np.arange(-2,3)
+plt.plot(x_s,linear_model_fn(x_s), color="green")  #desenha a reta
+plt.legend()
+plt.show()  
+
+
+##########################################################################################################################################################################
+################################################################ Regressão da Árvore de Decisão #########################################################################
+##########################################################################################################################################################################
+
+#Define os valores de treino e de teste de forma aleatória 
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=.2, random_state=0)
+
+#Função para determinar o melhor valor para o parâmetro max depth:
+def definir_max_depth(intervalo, X, Y):
+    final=[]
+    for i in intervalo:
+        vetor=[]
+        regressor = DecisionTreeRegressor(max_depth = i)
+        regressor.fit(X, Y)
+        R=regressor.score(X, Y)
+        linear_model=np.polyfit(regressor.predict(X_train) ,Y_train,1)   
+        vetor.append(i)
+        vetor.append(R)
+        vetor.append(linear_model)
+        final.append(vetor)
+    return final
+
+#Construção do modelo a partir de uma biblioteca
+regressor = DecisionTreeRegressor(max_depth=11)             #valor de max_depth pode ser alterado
+regressor.fit(X_train, Y_train)
+R=regressor.score(X_train, Y_train)
+
+#Construção dos gráficos
+plt.scatter(regressor.predict(X_train) ,Y_train, color='blue', label='Train')
+plt.scatter(regressor.predict(X_test) ,Y_test, color='red', label='Test')
+plt.xlabel("Y modelo")
+plt.ylabel("Y real")
+plt.title('DTR (com/sem componentes puros)')
+
+#Construção da reta de ajuste
+linear_model=np.polyfit(regressor.predict(X_train) ,Y_train,1)   #estima coeficientes reta treino
+#print(linear_model)                         
+linear_model_fn=np.poly1d(linear_model)     #faz a equação y=mx+b
+print(linear_model_fn)
+x_s=np.arange(55,80)
+plt.plot(x_s,linear_model_fn(x_s), color="green")  #desenha a reta
+plt.legend()
+plt.show()
+
+
+##########################################################################################################################################################################
+########################################################### Funções utilizadas para construir os novos datasets ##########################################################
+##########################################################################################################################################################################
+
+#Função para definir um intervalo de valores
+def range_float(start, step, stop):
+    v=[]
+    x = start
+    while x <= stop:
+        v.append(x)
+        x = x + step
+    return v
+
+#Função soma
+def soma(x):
+    final=[]
+    for j in range(len(x)):                     #número linhas
+        vetor=[]
+        for i in range_float(0,2,len(x[0])-1):            #número de colunas 2 em 2
+            valor =((x[j][i])*(x[j][i+1]))                       #multiplicação % pelo ron
+            vetor.append(valor)    
+        final.append(vetor)
+    return final
+
+#Função soma13
+def soma13(x):
+    final=[]
+    for j in range(len(x)):                     #número linhas
+        vetor=[]
+        for i in range_float(0,2,len(x[0])-1):            #número de colunas 2 em 2
+            if x[j][i] == 0:
+                valor=0
+            else:
+                valor =sqrt((x[j][i+1])/(x[j][i]))                #multiplicação % pelo ron
+            vetor.append(valor)    
+        final.append(vetor)
+    return final
+
+#Função soma1
+def soma1(x):
+    final=[]
+    for j in range(len(x)):                     #número linhas
+        vetor=[]
+        soma=0
+        l=0
+        for i in range_float(0,2,len(x[0])-1):            #número de colunas 2 em 2
+            valor =((x[j][i])*(x[j][i+1]))                          #multiplicação  % pelo ron
+            l = l + 1
+            soma = soma + (valor)
+        vetor.append(soma/l)  
+        final.append(vetor)
+    return final
+
+#Função soma2
+def soma2(x):
+    final=[]
+    for j in range(len(x)):                     #número linhas
+        vetor=[]
+        soma=0
+        l=0
+        for i in range_float(0,2,len(x[0])-1):            #número de colunas 2 em 2
+            valor =((x[j][i])*(x[j][i+1]))                       #multiplicação  % pelo ron
+            l = l + 1
+            soma = soma + (valor**2)
+        vetor.append(sqrt(soma/l))    
+        final.append(vetor)
+    return final    
+
+#Função soma3
+def soma3(x):
+    final=[]
+    for j in range(len(x)):                     #número linhas
+        vetor=[]
+        soma=0
+        l=0
+        for i in range_float(0,2,len(x[0])-1):            #número de colunas 2 em 2
+            valor =((x[j][i])*(x[j][i+1]))                         #multiplicação  % pelo ron
+            l = l + 1
+            soma = soma + (valor**1/2)
+        vetor.append((soma/l)**2)    
+        final.append(vetor)
+    return final
+
+#Função soma4
+def soma4(x):
+    médias=soma1(x)
+    final=[]
+    for j in range(len(x)):                     #número linhas
+        vetor=[]
+        l=0
+        soma=0
+        for i in range_float(0,2,len(x[0])-1):            #número de colunas 2 em 2
+            valor =((x[j][i])*(x[j][i+1]))  #multiplicação  % pelo ron
+            l = l + 1
+            soma_ = (valor-médias[j][0])**2
+            soma = soma + soma_
+        a=sqrt(soma/(l-1))
+        vetor.append(a)    
+        final.append(vetor)
+    return final
+
+#Função soma5
+def soma5(x):
+    final=[]
+    for j in range(len(x)):                     #número linhas
+        vetor=[]
+        soma=0
+        l=0
+        for i in range_float(0,2,len(x[0])-1):            #número de colunas 2 em 2
+            valor =((x[j][i])*(x[j][i+1]))  #multiplicação  % pelo ron
+            l = l + 1
+            soma = soma + (valor**2)
+        vetor.append((soma/l))    
+        final.append(vetor)
+    return final    
+
+#Função soma6
+def soma6(x):
+    médias=soma1(x)
+    final=[]
+    for j in range(len(x)):                     #número linhas
+        vetor=[]
+        l=0
+        soma=0
+        for i in range_float(0,2,len(x[0])-1):            #número de colunas 2 em 2
+            valor =((x[j][i])*(x[j][i+1]))  #multiplicação  % pelo ron
+            l = l + 1
+            soma_ = (valor-médias[j][0])**2
+            soma = soma + soma_
+        a=soma/(l)
+        vetor.append(a)    
+        final.append(vetor)
+    return final
+
+#Função soma11
+def soma11(x):
+    médias=soma1(x)
+    final=[]
+    for j in range(len(x)):                     #número linhas
+        vetor=[]
+        l=0
+        soma=0
+        for i in range_float(0,2,len(x[0])-1):            #número de colunas 2 em 2
+            valor =((x[j][i])*(x[j][i+1]))  #multiplicação  % pelo ron
+            l = l + 1
+            soma_ = (valor-médias[j][0])**4
+            soma = soma + soma_
+        a=soma/(l)
+        vetor.append(a/((soma5(x)[j][0])**2))    
+        final.append(vetor)
+    return final
+
+#Função soma12
+def soma12(x):
+    final=[]
+    médias=soma1(x)
+    rms=soma2(x)
+    for j in range(len(x)):                     #número linhas
+        vetor=[]
+        vetor.append(rms[j][0]/médias[j][0])    
+        final.append(vetor)
+    return final
+
+
+##########################################################################################################################################################################
+###################################################################### Construção de um novo modelo ######################################################################
+##########################################################################################################################################################################
+
+#Função para definir um intervalo de valores
+def range_float(start, step, stop):
+    v=[]
+    x = start
+    while x <= stop:
+        v.append(x)
+        x = x + step
+    return v
+
+#Função soma
+def soma(x):
+    final=[]
+    for j in range(len(x)):                     #número linhas
+        soma=0
+        vetor=[]
+        for i in range_float(0,2,len(x[0])-1):            #número de colunas 2 em 2
+            valor =((x[j][i+1])*(x[j][i]))
+            soma = soma + valor
+        vetor.append(soma)    
+        final.append(vetor)
+    return final
+
+#Função para determinar o valor das variáveis independentes
+def y_final(Y,vetor_soma):
+    return Y-vetor_soma
+Y = y_final(y.reshape(-1,1), soma(x))
+
+#Função para criar um vetor com os diferentes volumes dos componentes
+def x_volumes(x):
+    volumes=[]
+    for j in range(len(x)):       #número linhas
+        vetor=[]
+        for i in range_float(0,2,len(x[0])-1):
+            vetor.append(x[j][i])
+        volumes.append(vetor)
+    return volumes
+
+#Função para determinar o valor das variáveis dependentes
+def x_final(x_vol):
+    final=[]
+    for j in range(len(x_vol)):               #número linhas
+        vetor=[]
+        for l in range(len(x_vol[0])-1):
+            for i in range(l+1,len(x_vol[0])):          #número colunas
+                multi = x_vol[j][l] * x_vol[j][i]
+                vetor.append(multi)
+        final.append(vetor)
+    return final
+
+#Define os valores de treino e de teste de forma aleatória 
+X_ = np.array(x_final(x_volumes(x))) 
+Y_ = np.array(y_final(y.reshape(-1,1), soma(x))).reshape(1,-1)[0]
+X_train, X_test, Y_train, Y_test = train_test_split(X_, Y_, test_size=0.2, random_state=0)
+
+#Construção do modelo e criação de uma tabela com os resultados obtidos 
+X2 = sm.add_constant(X_train)
+est = sm.OLS(Y_train, X2)
+est2 = est.fit()
+tabela=est2.summary())
+
+
