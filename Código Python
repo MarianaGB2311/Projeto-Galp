@@ -45,7 +45,7 @@ plt.ylabel("Y real")
 plt.title('Regressão Linear Múltipla (com/sem componentes puros)')
 
 #Construção da reta de ajuste
-linear_model=np.polyfit(modelo.predict(X_train),Y_train,1)   #estima coeficientes reta treino
+linear_model=np.polyfit(modelo.predict(X_train),Y_train,1)   #estima coeficientes reta treino de grau 1
 linear_model_fn=np.poly1d(linear_model)                             #faz a equação y=mx+b
 x_s=np.arange(50,85)
 plt.plot(x_s,linear_model_fn(x_s), color="green")                  #desenha a reta
@@ -124,8 +124,8 @@ plt.ylabel("Y real")
 plt.title('KNN (com/sem componentes puros)')
 
 #Construção da reta de ajuste
-linear_model=np.polyfit(previsão(3, X_train, X_train),Y_train,1)               #estima coeficientes reta treino
-linear_model_fn=np.poly1d(linear_model)     #faz a equação y=mx+b
+linear_model=np.polyfit(previsão(3, X_train, X_train),Y_train,1)               #estima coeficientes reta treino de grau 1
+linear_model_fn=np.poly1d(linear_model)     #faz a equação y=mx+b 
 x_s=np.arange(85,100)
 plt.plot(x_s,linear_model_fn(x_s), color="green")                                     #desenha a reta
 plt.legend()
@@ -161,7 +161,7 @@ plt.ylabel("Y real")
 plt.title('SVR (com/sem componentes puros)')
 
 #Construção da reta de ajuste
-linear_model=np.polyfit(model.predict(X_train),Y_train.reshape(1,-1)[0],1)       #estima coeficientes reta treino
+linear_model=np.polyfit(model.predict(X_train),Y_train.reshape(1,-1)[0],1)       #estima coeficientes reta treino de grau 1
 print(linear_model)
 linear_model_fn=np.poly1d(linear_model)     #faz a equação y=mx+b
 x_s=np.arange(-2,3)
@@ -205,7 +205,7 @@ plt.ylabel("Y real")
 plt.title('DTR (com/sem componentes puros)')
 
 #Construção da reta de ajuste
-linear_model=np.polyfit(regressor.predict(X_train) ,Y_train,1)   #estima coeficientes reta treino
+linear_model=np.polyfit(regressor.predict(X_train) ,Y_train,1)   #estima coeficientes reta treino de grau 1
 #print(linear_model)                         
 linear_model_fn=np.poly1d(linear_model)     #faz a equação y=mx+b
 print(linear_model_fn)
