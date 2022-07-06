@@ -12,7 +12,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn import neighbors
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
-
+from sklearn.model_selection import GridSearchCV
 
 ##########################################################################################################################################################################
 ############################################################## Regressão Linear Múltipla #######################################################################################
@@ -98,15 +98,18 @@ for K in range(40):
     error = sqrt(mean_squared_error(Y_test,pred1))               #calcula o rmse
     rmse_val.append(error) #store rmse values
     #print('RMSE value for k= ' , K , 'is:', error)
-
+    
 #Construção do modelo a partir de uma biblioteca
+from sklearn.model_selection import GridSearchCV
+params = {'n_neighbors':[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]}
 knn = neighbors.KNeighborsRegressor()
 model = GridSearchCV(knn, params, cv=10)
 model.fit(X_train,Y_train)
 melhor_K=model.best_params_
 pred=model.predict(X_test)
 R=model.score(X_train,Y_train)
-Comparar valores obtidos pela função e pela biblioteca
+
+#Comparar valores obtidos pela função e pela biblioteca
 v=[]
 for i in range(len(pred)):
     b=[pred[i],a[i]]
