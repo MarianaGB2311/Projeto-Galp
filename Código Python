@@ -406,7 +406,7 @@ def soma(x):
         final.append(vetor)
     return final
 
-#Função para determinar o valor da variável independente
+#Função para determinar o valor da variável dependente
 def y_final(Y,vetor_soma):
     return Y-vetor_soma
 Y = y_final(y.reshape(-1,1), soma(x))
