@@ -68,7 +68,7 @@ def find_neighbors(k, X_tr, new_point):
 
 #Função para prever o valor da variável independente 
 def regressor(neighbor_arr):                              # neighbor_arr são distancias
-    y_arr = [Y_train[i[0]] for i in neighbor_arr]      #dentro do vetor vai retornar os diferentes valores de y    
+    y_arr = [Y_train[i[0]] for i in neighbor_arr]      #dentro do vetor vai retornar os diferentes valores de y, onde i[0] corresponde ao número da linha do ponto
     avg_y = np.mean(y_arr)                                 #Aplica a média aritmética
     return avg_y
 
@@ -406,7 +406,7 @@ def soma(x):
         final.append(vetor)
     return final
 
-#Função para determinar o valor das variáveis independentes
+#Função para determinar o valor da variável independente
 def y_final(Y,vetor_soma):
     return Y-vetor_soma
 Y = y_final(y.reshape(-1,1), soma(x))
@@ -421,12 +421,12 @@ def x_volumes(x):
         volumes.append(vetor)
     return volumes
 
-#Função para determinar o valor das variáveis dependentes
+#Função para determinar o valor das variáveis independentes
 def x_final(x_vol):
     final=[]
     for j in range(len(x_vol)):               #número linhas
         vetor=[]
-        for l in range(len(x_vol[0])-1):
+        for l in range(len(x_vol[0])-1):                #número colunas
             for i in range(l+1,len(x_vol[0])):          #número colunas
                 multi = x_vol[j][l] * x_vol[j][i]
                 vetor.append(multi)
