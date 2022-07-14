@@ -2,6 +2,7 @@
 ##################################################################### Bibliotecas Utilizadas #################################################################################
 #######################################################################################################################################################################
 
+import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 from sklearn.model_selection import train_test_split
@@ -13,6 +14,13 @@ from sklearn import neighbors
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.model_selection import GridSearchCV
+
+
+data = pd.read_csv(r"C:\Users\maria\OneDrive\Documentos\FCT\3ºano\Galp\RON\RON_VOLUMES.csv")
+
+Y=data.iloc[21:,1].values
+
+X=data.iloc[21:,2:].values
 
 ##########################################################################################################################################################################
 ############################################################## Regressão Linear Múltipla #######################################################################################
